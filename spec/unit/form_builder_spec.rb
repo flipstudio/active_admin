@@ -32,8 +32,9 @@ describe ActiveAdmin::FormBuilder do
   end
 
   def build_form(options = {}, &block)
+    model = options[:model] || Post
     options.merge!({:url => posts_path})
-    active_admin_form_for Post.new, options, &block
+    active_admin_form_for model.new, options, &block
   end
 
   context "in general with actions" do
@@ -292,6 +293,33 @@ describe ActiveAdmin::FormBuilder do
     end
   end
 
+  context "with has many inputs" do
+    let :body do
+      build_form :model => Category do |f|
+        f.has_many :posts do |p|
+          p.input :title
+        end
+      end
+    end
+
+    it "should translate the association name in header" do
+      begin
+        I18n.backend.store_translations(:en, :activerecord => { :models => { :post => { :one => "Blog Post", :other => "Blog Posts" } } })
+        body.should have_tag('h3', 'Blog Posts')
+      ensure
+        I18n.backend.reload!
+      end
+    end
+
+    it "should translate the association name in has many new button" do
+      begin
+        I18n.backend.store_translations(:en, :activerecord => { :models => { :post => { :one => "Blog Post", :other => "Blog Posts" } } })
+        body.should have_tag('a', 'Add New Blog Post')
+      ensure
+        I18n.backend.reload!
+      end
+    end
+  end
 
   { 
     "input :title, :as => :string"        => /id\=\"post_title\"/,
