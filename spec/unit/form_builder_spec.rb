@@ -1,4 +1,4 @@
-require 'spec_helper' 
+require 'spec_helper'
 
 describe ActiveAdmin::FormBuilder do
 
@@ -6,7 +6,7 @@ describe ActiveAdmin::FormBuilder do
 
   # Setup an ActionView::Base object which can be used for
   # generating the form for.
-  let(:helpers) do 
+  let(:helpers) do
     view = action_view
     def view.posts_path
       "/posts"
@@ -311,6 +311,10 @@ describe ActiveAdmin::FormBuilder do
       end
     end
 
+    it "should use model name when there is no translation for given model in header" do
+      body.should have_tag('h3', 'Post')
+    end
+
     it "should translate the association name in has many new button" do
       begin
         I18n.backend.store_translations(:en, :activerecord => { :models => { :post => { :one => "Blog Post", :other => "Blog Posts" } } })
@@ -319,9 +323,13 @@ describe ActiveAdmin::FormBuilder do
         I18n.backend.reload!
       end
     end
+
+    it "should use model name when there is no translation for given model in has many new button" do
+      body.should have_tag('a', 'Add New Post')
+    end
   end
 
-  { 
+  {
     "input :title, :as => :string"        => /id\=\"post_title\"/,
     "input :title, :as => :text"          => /id\=\"post_title\"/,
     "input :created_at, :as => :time"     => /id\=\"post_created_at_2i\"/,
