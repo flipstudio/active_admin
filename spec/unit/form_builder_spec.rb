@@ -1,10 +1,10 @@
-require 'spec_helper' 
+require 'spec_helper'
 
 describe ActiveAdmin::FormBuilder do
 
   # Setup an ActionView::Base object which can be used for
   # generating the form for.
-  let(:helpers) do 
+  let(:helpers) do
     view = action_view
     def view.posts_path
       "/posts"
@@ -36,6 +36,12 @@ describe ActiveAdmin::FormBuilder do
       text_node active_admin_form_for(assigns[:form_object], assigns[:form_options], &assigns[:form_block])
     end.to_s
   end
+
+  # def build_form(options = {}, &block)
+  #   model = options[:model] || Post
+  #   options.merge!({:url => posts_path})
+  #   active_admin_form_for model.new, options, &block
+  # end
 
   context "in general with actions" do
     let :body do
@@ -293,8 +299,43 @@ describe ActiveAdmin::FormBuilder do
     end
   end
 
+  context "with has many inputs" do
+    let :body do
+      build_form :model => Category do |f|
+        f.has_many :posts do |p|
+          p.input :title
+        end
+      end
+    end
 
-  { 
+    it "should translate the association name in header" do
+      begin
+        I18n.backend.store_translations(:en, :activerecord => { :models => { :post => { :one => "Blog Post", :other => "Blog Posts" } } })
+        body.should have_tag('h3', 'Blog Posts')
+      ensure
+        I18n.backend.reload!
+      end
+    end
+
+    it "should use model name when there is no translation for given model in header" do
+      body.should have_tag('h3', 'Post')
+    end
+
+    it "should translate the association name in has many new button" do
+      begin
+        I18n.backend.store_translations(:en, :activerecord => { :models => { :post => { :one => "Blog Post", :other => "Blog Posts" } } })
+        body.should have_tag('a', 'Add New Blog Post')
+      ensure
+        I18n.backend.reload!
+      end
+    end
+
+    it "should use model name when there is no translation for given model in has many new button" do
+      body.should have_tag('a', 'Add New Post')
+    end
+  end
+
+  {
     "input :title, :as => :string"        => /id\=\"post_title\"/,
     "input :title, :as => :text"          => /id\=\"post_title\"/,
     "input :created_at, :as => :time"     => /id\=\"post_created_at_2i\"/,
